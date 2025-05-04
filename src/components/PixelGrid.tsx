@@ -12,7 +12,6 @@ const PixelGrid: React.FC = () => {
 
   const handlePixelClick = (row: number, col: number, isRightClick = false) => {
     if (isRightClick) {
-      // Right click to erase
       setPixelColor(row, col, '');
       return;
     }
@@ -22,7 +21,6 @@ const PixelGrid: React.FC = () => {
     } else if (selectedTool === 'erase') {
       setPixelColor(row, col, '');
     } else if (selectedTool === 'fill') {
-      // Use the fill algorithm
       fillArea(grid, row, col, selectedColor, setPixelColor);
     }
   };
@@ -36,11 +34,10 @@ const PixelGrid: React.FC = () => {
 
   const handleMouseMove = (row: number, col: number) => {
     if (!isDrawing) return;
-    
-    // Only update if we're on a different pixel
+
     if (lastPixelRef.current?.row !== row || lastPixelRef.current?.col !== col) {
       lastPixelRef.current = { row, col };
-      
+
       if (selectedTool === 'draw' || selectedTool === 'erase') {
         handlePixelClick(row, col, selectedTool === 'erase');
       }
@@ -51,7 +48,6 @@ const PixelGrid: React.FC = () => {
     setIsDrawing(false);
   };
 
-  // Set up context menu prevention
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
       if (gridRef.current?.contains(e.target as Node)) {
@@ -68,19 +64,25 @@ const PixelGrid: React.FC = () => {
     };
   }, []);
 
-  const pixelSize = Math.max(6, Math.min(24, Math.floor(40 / gridSize) * zoom));
+  const pixelSize = 10 * zoom;
+  const gridWidth = gridSize * pixelSize;
+  const maxWidth = Math.min(gridWidth, 800);
+  const containerScale = gridWidth > maxWidth ? maxWidth / gridWidth : 1;
 
   return (
     <div className="relative bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg overflow-auto">
-      <div 
+      <div
         ref={gridRef}
-        className="grid border border-gray-300 dark:border-gray-600" 
-        style={{ 
+        className="grid border border-gray-300 dark:border-gray-600 mx-auto"
+        style={{
           gridTemplateColumns: `repeat(${gridSize}, ${pixelSize}px)`,
           gridTemplateRows: `repeat(${gridSize}, ${pixelSize}px)`,
+          transform: `scale(${containerScale})`,
+          transformOrigin: 'center',
+          width: 'fit-content'
         }}
       >
-        {grid.map((row, rowIndex) => 
+        {grid.map((row, rowIndex) =>
           row.map((color, colIndex) => (
             <div
               key={`${rowIndex}-${colIndex}`}
@@ -89,9 +91,9 @@ const PixelGrid: React.FC = () => {
                 cursor-crosshair transition-colors duration-100
                 ${selectedTool === 'erase' ? 'hover:bg-red-100 dark:hover:bg-red-900/30' : 'hover:bg-blue-100 dark:hover:bg-blue-900/30'}
               `}
-              style={{ 
+              style={{
                 backgroundColor: color || 'transparent',
-                width: `${pixelSize}px`, 
+                width: `${pixelSize}px`,
                 height: `${pixelSize}px`,
               }}
               onMouseDown={(e) => handleMouseDown(rowIndex, colIndex, e)}

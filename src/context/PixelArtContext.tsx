@@ -37,32 +37,60 @@ export const usePixelArt = () => {
 };
 
 export const PixelArtProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [gridSize, setGridSize] = useState(16);
-  const [zoom, setZoom] = useState(1);
-  
-  const initialGrid = Array(gridSize)
-    .fill(null)
-    .map(() => Array(gridSize).fill(''));
-  
-  const [history, setHistory] = useState<HistoryState>({
-    past: [],
-    present: initialGrid,
-    future: [],
+  const [gridSize, setGridSize] = useState(() => {
+    const saved = localStorage.getItem('pixel-art-data');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        return data.gridSize || 16;
+      } catch (e) {
+        return 16;
+      }
+    }
+    return 16;
   });
 
-  // Recreate the grid when the grid size changes
+  const [zoom, setZoom] = useState(1);
+
+  const createEmptyGrid = (size: number): Grid => {
+    return Array(size).fill(null).map(() => Array(size).fill(''));
+  };
+
+  const [history, setHistory] = useState<HistoryState>(() => {
+    const saved = localStorage.getItem('pixel-art-data');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        return {
+          past: [],
+          present: data.grid || createEmptyGrid(gridSize),
+          future: [],
+        };
+      } catch (e) {
+        return {
+          past: [],
+          present: createEmptyGrid(gridSize),
+          future: [],
+        };
+      }
+    }
+    return {
+      past: [],
+      present: createEmptyGrid(gridSize),
+      future: [],
+    };
+  });
+
   useEffect(() => {
-    const newGrid = Array(gridSize)
-      .fill(null)
-      .map(() => Array(gridSize).fill(''));
-    
+    const newGrid = createEmptyGrid(gridSize);
+
     // Copy existing data if possible
     for (let i = 0; i < Math.min(gridSize, history.present.length); i++) {
       for (let j = 0; j < Math.min(gridSize, history.present[i].length); j++) {
         newGrid[i][j] = history.present[i][j];
       }
     }
-    
+
     setHistory({
       past: [],
       present: newGrid,
@@ -72,12 +100,9 @@ export const PixelArtProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const setPixelColor = useCallback((row: number, col: number, color: Color) => {
     setHistory(prev => {
-      // Create a deep copy of the present grid
       const newGrid = prev.present.map(rowArray => [...rowArray]);
-      
-      // Make the change
       newGrid[row][col] = color;
-      
+
       return {
         past: [...prev.past, prev.present],
         present: newGrid,
@@ -95,10 +120,8 @@ export const PixelArtProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   const clearGrid = useCallback(() => {
-    const newGrid = Array(gridSize)
-      .fill(null)
-      .map(() => Array(gridSize).fill(''));
-    
+    const newGrid = createEmptyGrid(gridSize);
+
     setHistory(prev => ({
       past: [...prev.past, prev.present],
       present: newGrid,
@@ -109,10 +132,10 @@ export const PixelArtProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const undo = useCallback(() => {
     setHistory(prev => {
       if (prev.past.length === 0) return prev;
-      
+
       const newPast = [...prev.past];
       const previousGrid = newPast.pop();
-      
+
       return {
         past: newPast,
         present: previousGrid!,
@@ -124,10 +147,10 @@ export const PixelArtProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const redo = useCallback(() => {
     setHistory(prev => {
       if (prev.future.length === 0) return prev;
-      
+
       const newFuture = [...prev.future];
       const nextGrid = newFuture.shift();
-      
+
       return {
         past: [...prev.past, prev.present],
         present: nextGrid!,
@@ -155,13 +178,17 @@ export const PixelArtProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const savedData = localStorage.getItem('pixel-art-data');
       if (savedData) {
         const data = JSON.parse(savedData);
-        setGridSize(data.gridSize);
-        setHistory(prev => ({
-          past: [...prev.past, prev.present],
-          present: data.grid,
-          future: [],
-        }));
-        alert('Design loaded successfully!');
+        if (data.grid && Array.isArray(data.grid) && data.grid.length > 0) {
+          setGridSize(data.gridSize || data.grid.length);
+          setHistory(prev => ({
+            past: [...prev.past, prev.present],
+            present: data.grid,
+            future: [],
+          }));
+          alert('Design loaded successfully!');
+        } else {
+          throw new Error('Invalid grid data');
+        }
       } else {
         alert('No saved design found.');
       }

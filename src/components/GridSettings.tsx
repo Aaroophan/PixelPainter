@@ -4,13 +4,13 @@ import { MinusCircle, PlusCircle } from 'lucide-react';
 
 const GridSettings: React.FC = () => {
   const { gridSize, setGridSize, zoom, setZoom } = usePixelArt();
-  
+
   const handleGridSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setGridSize(parseInt(e.target.value, 10));
   };
 
   const increaseZoom = () => {
-    if (zoom < 4) setZoom(zoom + 0.5);
+    if (zoom < 8) setZoom(zoom + 0.5);
   };
 
   const decreaseZoom = () => {
@@ -29,9 +29,10 @@ const GridSettings: React.FC = () => {
           onChange={handleGridSizeChange}
           className="py-1.5 px-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-blue-500 focus:border-blue-500"
         >
-          <option value={8}>8 × 8</option>
           <option value={16}>16 × 16</option>
+          <option value={24}>24 × 24</option>
           <option value={32}>32 × 32</option>
+          <option value={48}>48 × 48</option>
           <option value={64}>64 × 64</option>
         </select>
       </div>
@@ -47,14 +48,14 @@ const GridSettings: React.FC = () => {
           >
             <MinusCircle size={18} />
           </button>
-          
-          <span className="font-medium w-12 text-center">
+
+          <span className="font-medium w-16 text-center">
             {Math.round(zoom * 100)}%
           </span>
-          
+
           <button
             onClick={increaseZoom}
-            disabled={zoom >= 4}
+            disabled={zoom >= 8}
             className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50"
             title="Zoom In"
           >
@@ -66,13 +67,13 @@ const GridSettings: React.FC = () => {
       <div className="flex-1 text-right">
         <label className="block text-sm font-medium mb-1">Preview</label>
         <div className="inline-block bg-gray-200 dark:bg-gray-700 rounded p-1">
-          <div 
+          <div
             className="preview-container"
             style={{
-              width: `${gridSize * 1}px`, 
-              height: `${gridSize * 1}px`,
+              width: `${gridSize}px`,
+              height: `${gridSize}px`,
               position: 'relative',
-              transform: 'scale(1.5)',
+              transform: 'scale(2)',
               transformOrigin: 'top right'
             }}
           >

@@ -1,24 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { usePixelArt } from '../context/PixelArtContext';
-import { generateSvgString, generateJsxCode } from '../utils/exportUtils';
-import { Copy, Download } from 'lucide-react';
+import { generateSvgString, generateComponentCode } from '../utils/exportUtils';
+import { parseSvgToGrid } from '../utils/importUtils';
+import { Copy, Download, Upload } from 'lucide-react';
 
 const ExportPanel: React.FC = () => {
-  const { grid, gridSize } = usePixelArt();
-  const [exportType, setExportType] = useState<'svg' | 'jsx'>('svg');
+  const { grid, gridSize, setGrid } = usePixelArt();
+  const [exportType, setExportType] = useState<'svg' | 'jsx' | 'tsx'>('svg');
   const [strokeWidth, setStrokeWidth] = useState(0);
-  const [copiedState, setCopiedState] = useState<'none' | 'svg' | 'jsx'>('none');
+  const [copiedState, setCopiedState] = useState<'none' | 'svg' | 'jsx' | 'tsx'>('none');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const svgString = generateSvgString(grid, gridSize, strokeWidth);
-  const jsxCode = generateJsxCode(grid, gridSize, strokeWidth);
+  const componentCode = generateComponentCode(grid, gridSize, strokeWidth, exportType === 'tsx');
 
-  const handleCopy = (type: 'svg' | 'jsx') => {
+  const handleCopy = (type: 'svg' | 'jsx' | 'tsx') => {
     if (type === 'svg') {
       navigator.clipboard.writeText(svgString);
     } else {
-      navigator.clipboard.writeText(jsxCode);
+      navigator.clipboard.writeText(componentCode);
     }
-    
+
     setCopiedState(type);
     setTimeout(() => setCopiedState('none'), 2000);
   };
@@ -33,39 +35,65 @@ const ExportPanel: React.FC = () => {
     document.body.removeChild(element);
   };
 
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const newGrid = parseSvgToGrid(text, gridSize);
+      setGrid(newGrid);
+      alert('SVG imported successfully!');
+    } catch (error) {
+      alert('Failed to import SVG. Make sure it\'s a valid pixel art SVG file.');
+    } finally {
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
       <h2 className="text-lg font-semibold mb-3">Export</h2>
-      
+
       <div className="flex flex-col space-y-4">
         <div>
           <label htmlFor="export-type" className="block text-sm font-medium mb-1">
             Export Format
           </label>
           <div className="flex rounded-md overflow-hidden">
-            <button 
-              className={`flex-1 py-2 px-3 text-sm font-medium ${
-                exportType === 'svg' 
-                  ? 'bg-blue-500 text-white' 
+            <button
+              className={`flex-1 py-2 px-3 text-sm font-medium ${exportType === 'svg'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
+                }`}
               onClick={() => setExportType('svg')}
             >
               SVG
             </button>
-            <button 
-              className={`flex-1 py-2 px-3 text-sm font-medium ${
-                exportType === 'jsx' 
-                  ? 'bg-blue-500 text-white' 
+            <button
+              className={`flex-1 py-2 px-3 text-sm font-medium ${exportType === 'jsx'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
+                }`}
               onClick={() => setExportType('jsx')}
             >
               JSX
             </button>
+            <button
+              className={`flex-1 py-2 px-3 text-sm font-medium ${exportType === 'tsx'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              onClick={() => setExportType('tsx')}
+            >
+              TSX
+            </button>
           </div>
         </div>
-        
+
         <div>
           <label htmlFor="stroke-width" className="block text-sm font-medium mb-1">
             Stroke Width
@@ -86,7 +114,7 @@ const ExportPanel: React.FC = () => {
             <span>1</span>
           </div>
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium mb-1">
             Preview
@@ -95,14 +123,14 @@ const ExportPanel: React.FC = () => {
             <div dangerouslySetInnerHTML={{ __html: svgString }} />
           </div>
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium mb-1">
-            {exportType === 'svg' ? 'SVG Code' : 'JSX Code'}
+            {exportType === 'svg' ? 'SVG Code' : `${exportType.toUpperCase()} Code`}
           </label>
           <div className="relative">
             <pre className="p-3 rounded-md bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-300 text-xs font-mono overflow-x-auto border border-gray-200 dark:border-gray-700 max-h-40">
-              {exportType === 'svg' ? svgString : jsxCode}
+              {exportType === 'svg' ? svgString : componentCode}
             </pre>
             <button
               onClick={() => handleCopy(exportType)}
@@ -118,25 +146,44 @@ const ExportPanel: React.FC = () => {
             )}
           </div>
         </div>
-        
-        <div className="flex space-x-2">
-          <button
-            onClick={() => handleCopy(exportType)}
-            className="flex-1 flex items-center justify-center py-2 px-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors gap-2"
-          >
-            <Copy size={16} />
-            Copy {exportType.toUpperCase()}
-          </button>
-          
-          {exportType === 'svg' && (
+
+        <div className="flex flex-col space-y-2">
+          <div className="flex space-x-2">
             <button
-              onClick={handleDownload}
-              className="flex-1 flex items-center justify-center py-2 px-3 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors gap-2"
+              onClick={() => handleCopy(exportType)}
+              className="flex-1 flex items-center justify-center py-2 px-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors gap-2"
             >
-              <Download size={16} />
-              Download SVG
+              <Copy size={16} />
+              Copy {exportType.toUpperCase()}
             </button>
-          )}
+
+            {exportType === 'svg' && (
+              <button
+                onClick={handleDownload}
+                className="flex-1 flex items-center justify-center py-2 px-3 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors gap-2"
+              >
+                <Download size={16} />
+                Download SVG
+              </button>
+            )}
+          </div>
+
+          <div className="relative">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".svg"
+              onChange={handleImport}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full flex items-center justify-center py-2 px-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors gap-2"
+            >
+              <Upload size={16} />
+              Import SVG
+            </button>
+          </div>
         </div>
       </div>
     </div>
