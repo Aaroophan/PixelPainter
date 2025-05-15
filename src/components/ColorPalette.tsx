@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTool } from '../context/ToolContext';
 
 const DEFAULT_PALETTE = [
-  '#000000', '#FFFFFF', '#FF0000', '#00FF00', 
+  '#000000', '#FFFFFF', '#FF0000', '#00FF00',
   '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF',
   '#FFA500', '#800080', '#008000', '#800000',
   '#808080', '#C0C0C0', '#FFC0CB', '#A52A2A'
@@ -32,11 +32,10 @@ const ColorPalette: React.FC = () => {
         {DEFAULT_PALETTE.map((color, index) => (
           <button
             key={index}
-            className={`w-8 h-8 rounded-md border-2 ${
-              selectedColor === color 
-                ? 'border-blue-500 dark:border-blue-400 ring-2 ring-blue-300' 
-                : 'border-gray-300 dark:border-gray-700'
-            }`}
+            className={`w-8 h-8 rounded-md transition-all duration-200 ${selectedColor === color
+                ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-gray-800 ring-blue-500 shadow-lg'
+                : 'hover:scale-110 hover:shadow-lg'
+              }`}
             style={{ backgroundColor: color }}
             onClick={() => handleColorClick(color)}
             title={color}
@@ -58,11 +57,11 @@ const ColorPalette: React.FC = () => {
               type="text"
               value={customColor}
               onChange={(e) => setCustomColor(e.target.value)}
-              className="flex-1 px-2 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600"
+              className="flex-1 px-2 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <button
               onClick={addCustomColor}
-              className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
+              className="px-3 py-1 bg-gradient-to-br from-sky-500 to-blue-600 text-white rounded-md hover:from-sky-600 hover:to-blue-700 transition-all duration-200 shadow-lg shadow-blue-500/30 text-sm"
             >
               Use
             </button>

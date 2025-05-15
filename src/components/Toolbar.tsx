@@ -21,10 +21,10 @@ const Toolbar: React.FC = () => {
           <button
             key={tool.id}
             className={`
-              flex items-center justify-center p-3 rounded-lg transition-colors
-              ${selectedTool === tool.id 
-                ? 'bg-blue-500 text-white' 
-                : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'}
+              flex items-center justify-center p-3 rounded-lg transition-all duration-200
+              ${selectedTool === tool.id
+                ? 'bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
+                : 'bg-gray-100 dark:bg-gray-700 hover:bg-gradient-to-br hover:from-sky-500 hover:to-blue-600 hover:text-white text-gray-700 dark:text-gray-200'}
             `}
             onClick={() => setSelectedTool(tool.id)}
             title={tool.name}
@@ -36,9 +36,12 @@ const Toolbar: React.FC = () => {
         <div className="w-px h-10 bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
         <button
-          className="flex items-center justify-center p-3 rounded-lg bg-gray-100 dark:bg-gray-700 
-                  hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition-colors
-                  disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`
+            flex items-center justify-center p-3 rounded-lg transition-all duration-200
+            ${!canUndo
+              ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
+              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gradient-to-br hover:from-sky-500 hover:to-blue-600 hover:text-white text-gray-700 dark:text-gray-200'}
+          `}
           onClick={undo}
           disabled={!canUndo}
           title="Undo"
@@ -47,9 +50,12 @@ const Toolbar: React.FC = () => {
         </button>
 
         <button
-          className="flex items-center justify-center p-3 rounded-lg bg-gray-100 dark:bg-gray-700 
-                  hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition-colors
-                  disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`
+            flex items-center justify-center p-3 rounded-lg transition-all duration-200
+            ${!canRedo
+              ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
+              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gradient-to-br hover:from-sky-500 hover:to-blue-600 hover:text-white text-gray-700 dark:text-gray-200'}
+          `}
           onClick={redo}
           disabled={!canRedo}
           title="Redo"
@@ -61,7 +67,7 @@ const Toolbar: React.FC = () => {
 
         <button
           className="flex items-center justify-center p-3 rounded-lg bg-gray-100 dark:bg-gray-700 
-                  hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition-colors"
+                  hover:bg-gradient-to-br hover:from-sky-500 hover:to-blue-600 hover:text-white text-gray-700 dark:text-gray-200 transition-all duration-200"
           onClick={saveToLocalStorage}
           title="Save"
         >
@@ -70,7 +76,7 @@ const Toolbar: React.FC = () => {
 
         <button
           className="flex items-center justify-center p-3 rounded-lg bg-gray-100 dark:bg-gray-700 
-                  hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition-colors"
+                  hover:bg-gradient-to-br hover:from-sky-500 hover:to-blue-600 hover:text-white text-gray-700 dark:text-gray-200 transition-all duration-200"
           onClick={loadFromLocalStorage}
           title="Load"
         >
@@ -83,8 +89,8 @@ const Toolbar: React.FC = () => {
         </button>
 
         <button
-          className="flex items-center justify-center p-3 rounded-lg bg-red-100 dark:bg-red-900 
-                  hover:bg-red-200 dark:hover:bg-red-800 text-red-700 dark:text-red-200 transition-colors"
+          className="flex items-center justify-center p-3 rounded-lg bg-gradient-to-br from-red-500 to-red-600 text-white 
+                  hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-lg shadow-red-500/30"
           onClick={clearGrid}
           title="Clear Canvas"
         >
